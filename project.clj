@@ -4,16 +4,15 @@
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
-                 [cambium/cambium.codec-simple "1.0.0"]
-                 [cambium/cambium.core         "1.1.0"]
-                 [cambium/cambium.logback.core "0.4.4"]
-                 [com.rpl/specter "1.1.3"]
+                 [com.cognitect.aws/api "0.8.539"]
+                 [com.cognitect.aws/endpoints "1.1.12.168"]
+                 [com.cognitect.aws/s3 "820.2.1083.0"]
                  [org.clojure/clojure "1.10.3"]
-                 [prismatic/schema "1.1.12"]
-                 [tupelo "21.06.03b"]
+                 [prismatic/schema "1.2.0"]
+                 [tupelo "22.02.25c"]
                  ]
   :plugins [
-    [com.jakemccrary/lein-test-refresh "0.24.1"]
+    [com.jakemccrary/lein-test-refresh "0.25.0"]
     [lein-ancient "0.7.0"]
     ]
 
