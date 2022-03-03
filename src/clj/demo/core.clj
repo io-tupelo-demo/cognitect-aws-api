@@ -1,8 +1,7 @@
 (ns demo.core
   (:use tupelo.core)
   (:require
-    [schema.core :as s])
-  (:gen-class))
+    [schema.core :as s]))
 
 (defn -main
   [& args]
