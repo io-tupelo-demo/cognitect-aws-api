@@ -8,15 +8,64 @@
     [clojure.walk :as walk]))
 
 (dotest
-
   ; Create a client:
-  (def s3 (aws/client {:api :s3
-                       ;   :region "us-west-1" ; #todo not working like this yet
-                       }))
+  (let [s3 (aws/client {:api :s3
+                        ; :region "us-west-1" ; #todo not working yet
+                        })]
   (is= cognitect.aws.client.Client (type s3))
 
   ; Tell the client to let you know when you get the args wrong:
   (is= true (aws/validate-requests s3 true))
+
+  ; Look up docs for an operation:
+  (let [text (with-out-str (aws/doc s3 :CreateBucket))] ; prints an HTTP format string
+    (is (str/contains-str? text "<p>Creates a new S3 bucket. To create a bucket, you must")))
+
+  (comment          ; sample output
+    {:Buckets []
+     :Owner   {:DisplayName "your-diaplayname"
+               :ID          "e25e3c1xxxxxxxxxxxxxxxxxxxxxx902aa063fb9a41a0c9f7ebda21b4c3b7b93"}})
+  (let [result (aws/invoke s3 {:op :ListBuckets})
+
+        req    (:http-request (meta result)) ; http-request and http-response are in the metadata
+        resp   (:http-response (meta result))]
+    (is= (map-vals result (const->fn nil))
+      {:Buckets nil
+       :Owner   nil})
+    (when false
+      (spyx-pretty req)
+      (spyx-pretty resp))
+
+    )
+
+  ; delete any leftovers!
+  (when false
+    (aws/invoke s3 {:op :DeleteBucket :request {:Bucket                    "dbxs-tmp-220302-2046"
+                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                }}))
+  (let [create-result (aws/invoke s3 {:op      :CreateBucket
+                                      :request {:Bucket                    "dbxs-tmp-220302-2046"
+                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                }})
+        list-result   (aws/invoke s3 {:op :ListBuckets})
+        delete-result (aws/invoke s3 {:op      :DeleteBucket
+                                      :request {:Bucket                    "dbxs-tmp-220302-2046"
+                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                }})
+        ]
+    (is= create-result {:Location "http://dbxs-tmp-220302-2046.s3.amazonaws.com/"})
+    (is (submatch? {:Buckets
+                    [{;:CreationDate #inst "2022-03-03T04:56:55.000-00:00",
+                      :Name "dbxs-tmp-220302-2046"}],
+                    :Owner {;:DisplayName "my-disp",
+                            ;:ID "e25e3cd2e7110d47024f43e3f0eb1902aa063fb9a41a0c9f7ebda21b4c3b7b93"
+                            }}
+          list-result))
+    (is= {} delete-result)
+    )
+
+  (comment
+    )
 
   ; Ask what ops your client can perform:
   (is= (sort (keys (aws/ops s3)))
@@ -118,53 +167,4 @@
      :UploadPartCopy
      :WriteGetObjectResponse])
 
-  ; Look up docs for an operation:
-  (let [text (with-out-str (aws/doc s3 :CreateBucket))] ; prints an HTTP format string
-    (is (str/contains-str? text "<p>Creates a new S3 bucket. To create a bucket, you must")))
-
-  (comment          ; sample output
-    {:Buckets []
-     :Owner   {:DisplayName "your-diaplayname"
-               :ID          "e25e3c1xxxxxxxxxxxxxxxxxxxxxx902aa063fb9a41a0c9f7ebda21b4c3b7b93"}})
-  (let [result (aws/invoke s3 {:op :ListBuckets})
-
-        req    (:http-request (meta result)) ; http-request and http-response are in the metadata
-        resp   (:http-response (meta result))]
-    (is= (map-vals result (const->fn nil))
-      {:Buckets nil
-       :Owner   nil})
-    (when false
-      (spyx-pretty req)
-      (spyx-pretty resp))
-
-    )
-
-  ; delete any leftovers!
-  (when false
-    (aws/invoke s3 {:op :DeleteBucket :request {:Bucket "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
-                                                }}))
-  (let [create-result (aws/invoke s3 {:op      :CreateBucket
-                                      :request {:Bucket "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
-                                                }})
-        list-result   (aws/invoke s3 {:op :ListBuckets})
-        delete-result (aws/invoke s3 {:op      :DeleteBucket
-                                      :request {:Bucket "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
-                                                }})
-        ]
-    (is= create-result {:Location "http://dbxs-tmp-220302-2046.s3.amazonaws.com/"})
-    (is (submatch? {:Buckets
-                    [{;:CreationDate #inst "2022-03-03T04:56:55.000-00:00",
-                      :Name "dbxs-tmp-220302-2046"}],
-                    :Owner {;:DisplayName "my-disp",
-                            ;:ID "e25e3cd2e7110d47024f43e3f0eb1902aa063fb9a41a0c9f7ebda21b4c3b7b93"
-                            }}
-          list-result))
-    (is= {} delete-result)
-    )
-
-  (comment
-    )
-  )
+  ))
