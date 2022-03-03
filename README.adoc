@@ -3,6 +3,8 @@
 
 title says it all
 
+See the link:https://github.com/cognitect-labs/aws-api[Cognitect aws-api docs]
+
 == Running Unit Tests 
 
 ```pre
@@ -44,11 +46,13 @@ aws_secret_access_key=V6pI/f3XXXXXXXXXXXXXXXXXXXXXXs63HirtM1WZ
 
 > cat ~/.aws/config
 [default]
-region = us-west-1
-output = json
+region=us-west-1
+output=json
 ```
 
-Note that you can override the values in the above files by setting environment variables:
+NOTE:  spaces in the above files around the `=` can cause failures!
+
+Also, be aware that you can override the values in the above files by setting environment variables:
 
 ```bash
 export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
