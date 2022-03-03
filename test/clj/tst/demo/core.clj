@@ -10,7 +10,9 @@
 (dotest
 
   ; Create a client:
-  (def s3 (aws/client {:api :s3}))
+  (def s3 (aws/client {:api :s3
+                       ;   :region "us-west-1" ; #todo not working like this yet
+                       }))
   (is= cognitect.aws.client.Client (type s3))
 
   ; Tell the client to let you know when you get the args wrong:
@@ -140,17 +142,17 @@
   ; delete any leftovers!
   (when false
     (aws/invoke s3 {:op :DeleteBucket :request {:Bucket "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration
-                                                {:LocationConstraint "us-west-1"}}}))
+                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                }}))
   (let [create-result (aws/invoke s3 {:op      :CreateBucket
                                       :request {:Bucket "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration
-                                                {:LocationConstraint "us-west-1"}}})
+                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                }})
         list-result   (aws/invoke s3 {:op :ListBuckets})
         delete-result (aws/invoke s3 {:op      :DeleteBucket
                                       :request {:Bucket "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration
-                                                {:LocationConstraint "us-west-1"}}})
+                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                }})
         ]
     (is= create-result {:Location "http://dbxs-tmp-220302-2046.s3.amazonaws.com/"})
     (is (submatch? {:Buckets
