@@ -8,7 +8,7 @@
 (dotest
   ; Create a client:
   (let [s3-client (aws/client {:api :s3
-                               ; :region "us-west-1" ; #todo not working yet
+                               :region :us-west-1 ; #todo not working yet (use keyword, not string "us-west-1" !)
                                })]
     (is= cognitect.aws.client.Client (type s3-client))
 
