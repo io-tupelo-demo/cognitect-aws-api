@@ -9,9 +9,11 @@
 
 (dotest
   ; Create a client:
-  (let [s3-client (aws/client {:api    :s3
+  (let [s3-bucket-name (format  "dbxs-tmp-2022-linux-%06d-%06d" (rand-int 1e6) (rand-int 1e6) )
+        s3-client (aws/client {:api    :s3
                                :region :us-west-1 ; #todo not working yet (use keyword, not string "us-west-1" !)
                                })]
+    (spyx s3-bucket-name)
     (spyx s3-client)
     (is= cognitect.aws.client.Client (type s3-client))
 
@@ -29,7 +31,7 @@
       (comment ; sample output
         {:Buckets []
          :Owner   {:DisplayName "your-diaplayname"
-                   :ID          "e25e3c1xxxxxxxxxxxxxxxxxxxxxx902aa063fb9a41a0c9f7ebda21b4c3b7b93"}})
+                   :ID          "e25e3c1xxxxxxxxxxxxxxxxxxxxxx90yyyyyyyyyyyyyyyyyyyyyy21b4c3b7b93"}})
       (is= (map-vals result (const->fn nil))
         {:Buckets nil
          :Owner   nil})
@@ -40,25 +42,25 @@
 
     ; delete any leftovers!
     (when false
-      (aws/invoke s3-client {:op :DeleteBucket :request {:Bucket                    "dbxs-tmp-220315-linux-2046"
+      (aws/invoke s3-client {:op :DeleteBucket :request {:Bucket                   s3-bucket-name
                                                          :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                          }}))
     (let [create-result (aws/invoke s3-client {:op      :CreateBucket
-                                               :request {:Bucket                    "dbxs-tmp-220315-linux-2046"
+                                               :request {:Bucket                    s3-bucket-name
                                                          :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                          }})
           list-result   (aws/invoke s3-client {:op :ListBuckets})
           delete-result (aws/invoke s3-client {:op      :DeleteBucket
-                                               :request {:Bucket                    "dbxs-tmp-220315-linux-2046"
+                                               :request {:Bucket                    s3-bucket-name
                                                          :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                          }})
           ]
-      (is= create-result {:Location "http://dbxs-tmp-220315-linux-2046.s3.amazonaws.com/"})
+      (is= create-result {:Location (format "http://%s.s3.amazonaws.com/" s3-bucket-name)})
       (is (contains-key? (set
                            (it-> list-result
                              (grab :Buckets it)
                              (mapv :Name it)))
-            "dbxs-tmp-220315-linux-2046"))
+            s3-bucket-name))
 
       (is= {} delete-result)
       )
