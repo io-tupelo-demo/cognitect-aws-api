@@ -13,7 +13,7 @@
 (dotest
   ; eg "dummy-tmp-2022-0315-211839-987802432"
   (let [s3-bucket-name (format "dummy-tmp-%s" (str/clip 26 (misc/tuid-str)))
-        >>             (println (format "\n  :s3-bucket-name => %s \n " s3-bucket-name))
+        >>             (println (format "\n  s3-bucket-name => %s \n " s3-bucket-name))
 
         s3-client      (aws/client {:api    :s3
                                     :region :us-west-1 ; #todo keyword, not string!
