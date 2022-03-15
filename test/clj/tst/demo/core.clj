@@ -12,6 +12,7 @@
   (let [s3 (aws/client {:api :s3
                         ; :region "us-west-1" ; #todo not working yet
                         })]
+    (spyx s3)
   (is= cognitect.aws.client.Client (type s3))
 
   ; Tell the client to let you know when you get the args wrong:
@@ -19,7 +20,7 @@
 
   ; Look up docs for an operation:
   (let [text (with-out-str (aws/doc s3 :CreateBucket))] ; prints an HTTP format string
-    (is (str/contains-str? text "<p>Creates a new S3 bucket. To create a bucket, you must")))
+    (is (spyx (str/contains-str? text "<p>Creates a new S3 bucket. To create a bucket, you must"))))
 
   (comment          ; sample output
     {:Buckets []
@@ -41,16 +42,16 @@
   ; delete any leftovers!
   (when false
     (aws/invoke s3 {:op :DeleteBucket :request {:Bucket                    "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                ; :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                 }}))
   (let [create-result (aws/invoke s3 {:op      :CreateBucket
                                       :request {:Bucket                    "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                ; :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                 }})
         list-result   (aws/invoke s3 {:op :ListBuckets})
         delete-result (aws/invoke s3 {:op      :DeleteBucket
                                       :request {:Bucket                    "dbxs-tmp-220302-2046"
-                                                :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
+                                                ; :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                 }})
         ]
     (is= create-result {:Location "http://dbxs-tmp-220302-2046.s3.amazonaws.com/"})
