@@ -4,17 +4,19 @@
         tupelo.test)
   (:require
     [cognitect.aws.client.api :as aws]
+    [tupelo.java-time :as tjt]
     [tupelo.string :as str]
     [clojure.walk :as walk]))
 
 (dotest
-  ; Create a client:
-  (let [s3-bucket-name (format  "dbxs-tmp-2022-linux-%06d-%06d" (rand-int 1e6) (rand-int 1e6) )
-        s3-client (aws/client {:api    :s3
-                               :region :us-west-1 ; #todo not working yet (use keyword, not string "us-west-1" !)
-                               })]
+  (let [s3-bucket-name (format "dummy-tmp-%s-%06d" ; eg "dummy-tmp-20220315-210604-930037"
+                         (tjt/format->timestamp-compact (java.time.Instant/now))
+                         (rand-int 1e6))
+
+        s3-client      (aws/client {:api    :s3
+                                    :region :us-west-1 ; #todo not working yet (use keyword, not string "us-west-1" !)
+                                    })]
     (spyx s3-bucket-name)
-    (spyx s3-client)
     (is= cognitect.aws.client.Client (type s3-client))
 
     ; Tell the client to let you know when you get the args wrong:
@@ -28,7 +30,7 @@
 
           req    (:http-request (meta result)) ; http-request and http-response are in the metadata
           resp   (:http-response (meta result))]
-      (comment ; sample output
+      (comment      ; sample output
         {:Buckets []
          :Owner   {:DisplayName "your-diaplayname"
                    :ID          "e25e3c1xxxxxxxxxxxxxxxxxxxxxx90yyyyyyyyyyyyyyyyyyyyyy21b4c3b7b93"}})
@@ -40,11 +42,6 @@
         (spyx-pretty resp))
       )
 
-    ; delete any leftovers!
-    (when false
-      (aws/invoke s3-client {:op :DeleteBucket :request {:Bucket                   s3-bucket-name
-                                                         :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
-                                                         }}))
     (let [create-result (aws/invoke s3-client {:op      :CreateBucket
                                                :request {:Bucket                    s3-bucket-name
                                                          :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
@@ -62,8 +59,8 @@
                              (mapv :Name it)))
             s3-bucket-name))
 
-      (is= {} delete-result)
-      )
+      ; be sure to delete temp bucket!
+      (is= {} delete-result))
 
     ; how to get docstring information. Use `(println ...)` to display
     (let [getobject-resp   (with-out-str (aws/doc s3-client :GetObject))
