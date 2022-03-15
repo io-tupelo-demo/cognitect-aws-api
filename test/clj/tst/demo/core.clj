@@ -3,20 +3,21 @@
         tupelo.core
         tupelo.test)
   (:require
+    [clojure.walk :as walk]
     [cognitect.aws.client.api :as aws]
     [tupelo.java-time :as tjt]
+    [tupelo.misc :as misc]
     [tupelo.string :as str]
-    [clojure.walk :as walk]))
+    ))
 
 (dotest
-  (let [s3-bucket-name (format "dummy-tmp-%s-%06d" ; eg "dummy-tmp-20220315-210604-930037"
-                         (tjt/format->timestamp-compact (java.time.Instant/now))
-                         (rand-int 1e6))
+  ; eg "dummy-tmp-2022-0315-211839-987802432"
+  (let [s3-bucket-name (format "dummy-tmp-%s" (str/clip 26 (misc/tuid-str)))
+        >>             (println (format "\n  :s3-bucket-name => %s \n " s3-bucket-name))
 
         s3-client      (aws/client {:api    :s3
-                                    :region :us-west-1 ; #todo not working yet (use keyword, not string "us-west-1" !)
+                                    :region :us-west-1 ; #todo keyword, not string!
                                     })]
-    (spyx s3-bucket-name)
     (is= cognitect.aws.client.Client (type s3-client))
 
     ; Tell the client to let you know when you get the args wrong:
