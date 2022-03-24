@@ -9,7 +9,7 @@
                  [com.cognitect.aws/s3 "820.2.1083.0"]
                  [org.clojure/clojure "1.10.3"]
                  [prismatic/schema "1.2.0"]
-                 [tupelo "22.03.09"]
+                 [tupelo "22.03.17"]
                  ]
   :plugins [
     [com.jakemccrary/lein-test-refresh "0.25.0"]
