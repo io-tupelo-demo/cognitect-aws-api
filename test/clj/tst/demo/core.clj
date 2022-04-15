@@ -2,17 +2,16 @@
   (:use demo.core tupelo.core tupelo.test)
   (:require
     [cognitect.aws.client.api :as aws]
-    [tupelo.java-time :as tjt]
+    [tupelo.java-time :as time]
     [tupelo.string :as str]
     ))
 
 (dotest
-  ; eg "dummy-tmp-2022-0315-211839-987802432"
-  (let [s3-bucket-name (format "dummy-tmp-%s" (str/clip 26 (tjt/tuid-str)))
-        >>             (println (format "\n  :s3-bucket-name => %s \n " s3-bucket-name))
-
+  ; Use the TUID (Time Unique ID) to make a unique bucket name `dummy-tmp-2022-0315-211839-987802432`
+  (let [s3-bucket-name (format "dummy-tmp-%s" (str/clip 26 (time/tuid-str)))
+        >>             (println (format "\n  s3-bucket-name => %s \n " s3-bucket-name))
         s3-client      (aws/client {:api    :s3
-                                    :region :us-west-1 ; #todo keyword, not string!
+                                    :region :us-west-1 ; Note! must use keyword, not string!
                                     })]
     (is= cognitect.aws.client.Client (type s3-client))
 
@@ -24,39 +23,46 @@
       (is (str/contains-str? text "<p>Creates a new S3 bucket. To create a bucket, you must")))
 
     (let [result (aws/invoke s3-client {:op :ListBuckets})
-
-          req    (:http-request (meta result)) ; http-request and http-response are in the metadata
+          ; http-request and http-response are in the metadata
+          req    (:http-request (meta result))
           resp   (:http-response (meta result))]
-      (comment      ; sample output
+      (comment ; sample output
         {:Buckets []
          :Owner   {:DisplayName "your-diaplayname"
                    :ID          "e25e3c1xxxxxxxxxxxxxxxxxxxxxx90yyyyyyyyyyyyyyyyyyyyyy21b4c3b7b93"}})
       (is= (map-vals result (const->fn nil))
         {:Buckets nil
          :Owner   nil})
-      (when false
+      (when false ; for debugging
         (spyx-pretty req)
         (spyx-pretty resp))
       )
 
-    (let [create-result (aws/invoke s3-client {:op      :CreateBucket
+    (let [
+          ; Create the bucket
+          create-result (aws/invoke s3-client {:op      :CreateBucket
                                                :request {:Bucket                    s3-bucket-name
                                                          :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                          }})
+          ; List all buckets
           list-result   (aws/invoke s3-client {:op :ListBuckets})
+
+          ; Delete the bucket
           delete-result (aws/invoke s3-client {:op      :DeleteBucket
                                                :request {:Bucket                    s3-bucket-name
                                                          :CreateBucketConfiguration {:LocationConstraint "us-west-1"}
                                                          }})
           ]
+      ; verify bucket creation
       (is= create-result {:Location (format "http://%s.s3.amazonaws.com/" s3-bucket-name)})
-      (is (contains-key? (set
-                           (it-> list-result
-                             (grab :Buckets it)
-                             (mapv :Name it)))
-            s3-bucket-name))
 
-      ; be sure to delete temp bucket!
+      ; verify new bucket name when list all buckets
+      (let [all-bucket-names (set
+                               (mapv :Name
+                                 (grab :Buckets list-result)))]
+        (is (contains-key? all-bucket-names s3-bucket-name)))
+
+      ; the result of deleting the bucket is an empty map (no errors)
       (is= {} delete-result))
 
     ; how to get docstring information. Use `(println ...)` to display
