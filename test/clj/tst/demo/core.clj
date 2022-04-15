@@ -1,18 +1,14 @@
 (ns tst.demo.core
-  (:use demo.core
-        tupelo.core
-        tupelo.test)
+  (:use demo.core tupelo.core tupelo.test)
   (:require
-    [clojure.walk :as walk]
     [cognitect.aws.client.api :as aws]
     [tupelo.java-time :as tjt]
-    [tupelo.misc :as misc]
     [tupelo.string :as str]
     ))
 
 (dotest
   ; eg "dummy-tmp-2022-0315-211839-987802432"
-  (let [s3-bucket-name (format "dummy-tmp-%s" (str/clip 26 (misc/tuid-str)))
+  (let [s3-bucket-name (format "dummy-tmp-%s" (str/clip 26 (tjt/tuid-str)))
         >>             (println (format "\n  :s3-bucket-name => %s \n " s3-bucket-name))
 
         s3-client      (aws/client {:api    :s3
